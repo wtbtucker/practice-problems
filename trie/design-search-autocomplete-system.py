@@ -24,7 +24,8 @@ Output
 '''
 class TrieNode(object):
     def __init__(self):
-        self.children = {}
+        self.children = collections.defaultdict(TrieNode)
+        self.is_word = False
         self.data = None
         self.rank = 0
         
@@ -32,40 +33,42 @@ class AutocompleteSystem(object):
     def __init__(self, sentences, times):
         self.root = TrieNode()
         self.keyword = ""
-        for i, sentence in enumerate(sentences):
-            self.addRecord(sentence, times[i])
+        for sentence, times_entered in zip(sentences, times):
+            self.addRecord(sentence, times_entered)
 
-    def addRecord(self, sentence, hot):
-        p = self.root
-        for c in sentence:
-            if c not in p.children:
-                p.children[c] = TrieNode()
-            p = p.children[c]
-        p.data = sentence
-        p.rank -= hot
+    def addRecord(self, sentence, times_entered):
+        curr = self.root
+        for char in sentence:
+            curr = curr.children[char]
+        curr.is_word = True
+        curr.data = sentence
+        curr.rank -= times_entered
     
     def dfs(self, root):
         ret = []
         if root:
-            if root.data:
+            if root.is_word:
                 ret.append((root.rank, root.data))
             for child in root.children:
                 ret.extend(self.dfs(root.children[child]))
         return ret
         
     def search(self, sentence):
-        p = self.root
-        for c in sentence:
-            if c not in p.children:
+        curr = self.root
+        for char in sentence:
+            if char not in curr.children:
                 return []
-            p = p.children[c]
-        return self.dfs(p)
+            curr = curr.children[char]
+        return self.dfs(curr)
     
-    def input(self, c):
+    # accept stream of user input character by character, store in global variable
+    def input(self, char):
         results = []
-        if c != "#":
-            self.keyword += c
+        if char != "#":
+            self.keyword += char
             results = self.search(self.keyword)
+        
+        # store input in Trie
         else:
             self.addRecord(self.keyword, 1)
             self.keyword = ""

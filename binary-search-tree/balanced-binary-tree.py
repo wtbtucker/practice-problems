@@ -17,22 +17,28 @@ Output: true
 '''
 
 
-// since the height of a tree is always greater than or equal to 0
-// we use -1 as a flag to indicate if the subtree is not balanced
-class Solution {
-    public boolean isBalanced(TreeNode root) {
-        return getHeight(root) != -1;
-    }
-    
-    private int getHeight(TreeNode node) {
-        if (node == null) return 0;
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def isBalanced(self, root: Optional[TreeNode]) -> bool:
 
-        int left = getHeight(node.left);
-        int right = getHeight(node.right);
+        def dfs(root: TreeNode) -> int:
+            if not root:
+                return 0
+            
+            height_left = dfs(root.left)
+            height_right = dfs(root.right)
 
-        // left, right subtree is unbalanced or cur tree is unbalanced
-        if (left == -1 || right == -1 || Math.abs(left - right) > 1) return -1;
+            # use -1 as a flag to indicate if the subtree is not balanced, real height will never be < 0
+            is_balanced = abs(height_left - height_right) <= 1 and height_left != -1 and height_right != -1
 
-        return Math.max(left, right) + 1;
-    }
-}
+            height = max(height_left, height_right) + 1 if is_balanced else -1
+            
+            return height
+        
+        height = dfs(root)
+        return height != -1

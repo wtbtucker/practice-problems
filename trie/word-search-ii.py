@@ -21,64 +21,53 @@ Input: board = [["a","b"],["c","d"]], words = ["abcb"]
 Output: []
 '''
 
-class TrieNode:
+class Trie:
     def __init__(self):
-        self.children = collections.defaultdict(TrieNode)
-        self.word = None
-    
+        self.children = collections.defaultdict(Trie)
+        self.is_word = False
+        self.content = ''
 
 class Solution:
-    def __init__(self):
-        self.answer = []
+    def insert_word(self, word):
+        curr = self.root
+        for char in word:
+            curr = curr.children[char]
+        curr.is_word = True
+        curr.content = word
 
-    def dfs(self, root, cell, board):
-        if root:
-            ret = []
-            if root.word:
-                ret.append(root.word)
-            
-            row, col = cell
-            letter = board[row][col]
-            board[row][col] = '$'
-            for adjacent_cell in self.findAdjacentCells(cell, board):
-                r, c = adjacent_cell
-                if board[r][c] in root.children:
-                    ret.extend(self.dfs(root.children[board[r][c]], adjacent_cell, board))
-            board[row][col] = letter
-            
-        return ret
-        
-    def findAdjacentCells(self, cell, board):
-        adjacent_cells = []
-        r, c = cell
-        if r-1 >= 0:
-            adjacent_cells.append((r-1, c))
-        if r+1 < len(board):
-            adjacent_cells.append((r+1, c))
-        if c-1 >= 0:
-            adjacent_cells.append((r, c-1))
-        if c+1 < len(board[0]):
-            adjacent_cells.append((r, c+1))
-            
-        return adjacent_cells
-        
-        
     def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:
-        root = TrieNode()
-        curr = root
-        
-        # Insert words into Trie
+        self.root = Trie()
+        self.answer = set()
+
         for word in words:
-            for ch in word:
-                curr = curr.children[ch]
-            curr.word = word
-            curr = root
-            
+            self.insert_word(word)
         
-        answer = []
-        for i, row in enumerate(board):
-            for j, cell in enumerate(row):
-                if cell in root.children:
-                    answer.extend(self.dfs(root.children[cell], (i, j), board))
-        return set(answer)
+        m = len(board)
+        n = len(board[0])
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        
+        def dfs(r: int, c: int, visited: set, curr: Trie):
+            if curr.is_word:
+                self.answer.add(curr.content)
+            
+            
+            for delta_r, delta_c in directions:
+                new_r, new_c = r + delta_r, c + delta_c
+                if 0 <= new_r < m and 0 <= new_c < n and (new_r, new_c) not in visited and board[new_r][new_c] in curr.children:
+                    visited.add((new_r, new_c))
+                    dfs(new_r, new_c, visited, curr.children[board[new_r][new_c]])
+                    visited.remove((new_r, new_c))
+        
+        visited = set()
+        for i in range(m):
+            for j in range(n):
+                char = board[i][j]
+                if char in self.root.children:
+                    visited.add((i, j))
+                    dfs(i, j, visited, self.root.children[char])
+                    visited.remove((i, j))
+        
+        return list(self.answer)
+
+
         

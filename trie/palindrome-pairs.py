@@ -24,52 +24,48 @@ Input: words = ["a",""]
 Output: [[0,1],[1,0]]
 '''
 
-class TrieNode:
-    def __init__(self):
-        self.children = collections.defaultdict(TrieNode)
-        self.word_idx = None
-        self.palindrome_suffixes = []
-
 class Solution:
     def palindromePairs(self, words: List[str]) -> List[List[int]]:
-        self.words = words
-        self.buildTrie(self.words)
-        answer = []
-        for i, word in enumerate(words):
-            answer.extend(self.searchWord(i, word))
-        return answer
-            
 
-    def buildTrie(self, words):
-        self.root = TrieNode()
-        for i, word in enumerate(words):
-            curr = self.root
-            for j, ch in enumerate(word):
-                if word[j:] == word[j:][::-1]:
-                    curr.palindrome_suffixes.append(i)
-                curr = curr.children[ch]
-            curr.word_idx = i
+        # valid prefix word[:i] means word[i:] is palindromic
+        def all_valid_prefixes(word):
+            valid_prefixes = []
+            for i in range(len(word)):
+                if word[i:] == word[i:][::-1]:
+                    valid_prefixes.append(word[:i])
+            return valid_prefixes
+        
+        # valid suffix word[i:] means word[:i] is palindromic
+        def all_valid_suffixes(word):
+            valid_suffixes = []
+            for i in range(len(word)):
+                if word[:i+1] == word[:i+1][::-1]:
+                    valid_suffixes.append(word[i+1:])
+            return valid_suffixes
+        
+        word_lookup = {word: i for i, word in enumerate(words)}
+        solutions = []
 
-    def searchWord(self, i, word):
-        m = len(word)
-        
-        curr = self.root
-        palindromes = []
-        
-        for j in range(m-1,-1,-1):
-            if curr.word_idx != None and (word[:j+1] == word[:j+1][::-1]):
-                if curr.word_idx != i:
-                    palindromes.append([curr.word_idx, i])
-            ch = word[j]
-            if ch not in curr.children:
-                return palindromes
-            curr = curr.children[ch]
+        for idx, word in enumerate(words):
 
-        if curr.word_idx != None and curr.word_idx != i:
-            palindromes.append([curr.word_idx, i])
-        for j in curr.palindrome_suffixes:
-            palindromes.append([j, i])          
+            # case where reversed_word exactly equals another word 
+            # eg. cat + tac
+            reversed_word = word[::-1]
+            if reversed_word in word_lookup and idx != word_lookup[reversed_word]:
+                solutions.append([idx, word_lookup[reversed_word]])
+            
+            # case where prefix of word matches another word and remainder of word is palindromic 
+            # eg cataba + tac
+            for prefix in all_valid_prefixes(word):
+                reversed_prefix = prefix[::-1]
+                if reversed_prefix in word_lookup:
+                    solutions.append([idx, word_lookup[reversed_prefix]])
+            
+            # case where suffix of word matches another word and remainder of word is palindromic
+            # eg lls + sssll
+            for suffix in all_valid_suffixes(word):
+                reversed_suffix = suffix[::-1]
+                if reversed_suffix in word_lookup:
+                    solutions.append([word_lookup[reversed_suffix], idx])
         
-        return palindromes
-            
-            
+        return solutions

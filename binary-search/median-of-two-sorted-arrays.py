@@ -17,17 +17,42 @@ Input: nums1 = [1,2], nums2 = [3,4]
 Output: 2.50000
 '''
 
-def findMedianSortedArrays(self, nums1, nums2):
-    a, b = sorted((nums1, nums2), key=len)
-    m, n = len(a), len(b)
-    after = (m + n - 1) / 2
-    lo, hi = 0, m
-    while lo < hi:
-        i = (lo + hi) / 2
-        if after-i-1 < 0 or a[i] >= b[after-i-1]:
-            hi = i
-        else:
-            lo = i + 1
-    i = lo
-    nextfew = sorted(a[i:i+2] + b[after-i:after-i+2])
-    return (nextfew[0] + nextfew[1 - (m+n)%2]) / 2.0
+class Solution:
+    def findMedianSortedArrays(self, nums1: List[int], nums2: List[int]) -> float:
+
+        m = len(nums1)
+        n = len(nums2)
+
+        # binary search in the smaller array to reduce overall time complexity
+        if m > n:
+            return self.findMedianSortedArrays(nums2, nums1)
+        
+        left, right = 0, m
+
+        # for even number of elements find smaller of two middle elements
+        median_idx = (m + n + 1) // 2 
+
+        while left <= right:
+            partition_1 = (left + right) // 2
+            partition_2 = median_idx - partition_1
+            
+            max_left_1 = nums1[partition_1 - 1] if partition_1 > 0 else -float('inf')
+            min_right_1 = nums1[partition_1] if partition_1 < m else float('inf')
+
+            max_left_2 = nums2[partition_2 - 1] if partition_2 > 0 else -float('inf')
+            min_right_2 = nums2[partition_2] if partition_2 < n else float('inf')
+
+            # partition_1 and partition_2 are in the middle of the entire search space
+            if max_left_1 <= min_right_2 and max_left_2 <= min_right_1:
+                if (m + n) % 2:
+                    return max(max_left_1, max_left_2)
+                else:
+                    return (max(max_left_1, max_left_2) + min(min_right_1, min_right_2)) / 2
+
+            # too many elements are greater than partition elements
+            elif max_left_1 > min_right_2:
+                right = partition_1 - 1
+            
+            # too many elements are less than partition elements
+            else:
+                left = partition_1 + 1

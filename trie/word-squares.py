@@ -26,12 +26,11 @@ class TrieNode:
 
 class Solution:
     def wordSquares(self, words: List[str]) -> List[List[str]]:
-        self.words = words
-        self.N = len(words[0])
+        self.word_length = len(words[0])
         results = []
         word_squares = []
 
-        self.buildTrie(self.words)
+        self.buildTrie(words)
         for word in words:
             word_squares = [word]
             self.backtracking(1, word_squares, results)
@@ -47,7 +46,7 @@ class Solution:
             node.word = word
     
     def backtracking(self, step, word_squares, results):
-        if step == self.N:
+        if step == self.word_length:
             results.append(word_squares[:])
             return
         
@@ -73,9 +72,3 @@ class Solution:
             for child in root.children:
                 ret.extend(self.dfs(root.children[child]))
         return ret
-        
-    
-                
-                
-        
-    

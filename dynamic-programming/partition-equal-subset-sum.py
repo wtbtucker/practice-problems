@@ -12,28 +12,25 @@ Constraints:
 1 <= nums.length <= 200
 1 <= nums[i] <= 100
 '''
-from functools import lru_cache
-
 class Solution:
     def canPartition(self, nums: List[int]) -> bool:
 
-        total = sum(nums)
-
-        if total % 2 == 1:
+        total_sum = sum(nums)
+        if total_sum % 2:
             return False
 
-        target = total // 2
-
+        target = total_sum // 2
         n = len(nums)
-        
-        @lru_cache(None)
-        def dfs(nums: Tuple[int], n: int, target: int) -> bool:
-            if target == 0:
+
+        @cache
+        def dp(idx: int, remaining: int) -> bool:
+            if remaining == 0:
                 return True
-            if n == 0 or target < 0:
+            
+            if remaining < 0 or idx < 0:
                 return False
             
-            result = dfs(nums, n-1, target) or dfs(nums, n-1, target-nums[n-1])
-            return result
+            return dp(idx - 1, remaining) or dp(idx - 1, remaining - nums[idx])
         
-        return dfs(tuple(nums), n-1, target)
+        return dp(n-1, target)
+        
